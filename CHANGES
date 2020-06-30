@@ -1,0 +1,76 @@
+
+
+Jake's changes ...
+
+We need to run this in an environment that does not support docker containers.
+
+Using the latest version of diamond. (Has different options.)
+
+Using updated versions of some R packages including (data.table)
+
+Cluster nodes won't permit writing to /dev/stdout.
+
+
+
+Made diamond reference
+diamond makedb --in hla.faa --db hla.dmnd
+
+
+
+
+Line 63 - bin/align.pl
+
+Change parameters to diamond call
+
+#open(IN, "diamond blastx -t . -C 20000 --index-mode 1 --seg no --min-score 10 --top 20 -c 1 -d $root/data/hla -q $fastq_file -f tab --quiet -o /dev/stdout |") or die $!;
+#
+# https://github.com/bbuchfink/diamond/issues/140
+# These parameters are for a very old version. You should remove -C, replace --index-mode with --sensitive and --seg with --masking 0.
+open(IN, "diamond blastx -t . --sensitive --masking 0 --min-score 10 --top 20 -c 1 -d $root/data/hla -q $fastq_file -f tab --quiet -o /dev/stdout |") or die $!; 
+
+
+
+processing FASTQ file
+diamond v0.9.30.131 (C) Max Planck Society for the Advancement of Science
+Documentation, support and updates available at http://www.diamondsearch.org
+
+Permission denied
+Error: Error opening file /dev/stdout
+	matched to 0 HLA exons
+	0 reads matched to HLA types not in the MSA file
+translating matches to MSA
+
+
+Removed the "-o /dev/stdout" as diamond defaults to writing to STDOUT
+
+
+
+
+I had to install a newer version of the R package data.table to get rid of a "SETLENGTH() cannot be applied to an ALTVEC object" error.
+
+
+
+
+
+Worked on bowtie2 alignments to standard hg38.
+Should realign with bwa to hg38 without alternates to determine if results any different.
+
+date=$( date "+%Y%m%d%H%M%S" )
+for f in ${INDIR}/*.h38au.bowtie2-e2e.bam ; do
+echo $f
+s=$( basename $f .h38au.bowtie2-e2e.bam )
+echo $s
+outbase=${OUTDIR}
+if [ ! -f "${outbase}/report-${s}-hla.json" ] ; then
+echo "~/github/ucsffrancislab/HLA/bin/run.py --input_bam_path $f --sample_id $s --output_path ${outbase}" | qsub -N $s -j oe -o ${outbase}/${s}.${date}.out.txt -l nodes=1:ppn=60 -l vmem=450gb -l feature=nocommunal
+fi
+done
+
+
+
+Then merged into csv with my python script 
+
+./merge_json.py --int --output merged_hla.csv.gz out/report-*
+
+
+

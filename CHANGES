@@ -1,5 +1,17 @@
 
 
+The original repository contains a large file which you will not be able to download with `git clone`.
+At least not by default.
+You get some type of smudge error suggesting the owner needs to buy credits.
+The file in question appears to be part of a bwa reference (hg38.chr6.fna.bwt).
+This would only be needed if you were trying to realign your reads.
+You'll have to build your own if you want to do that.
+Use the following instead.
+
+GIT_LFS_SKIP_SMUDGE=1 git clone SERVER-REPOSITORY
+
+
+
 Jake's changes ...
 
 We need to run this in an environment that does not support docker containers.
